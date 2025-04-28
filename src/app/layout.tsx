@@ -4,8 +4,11 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import {
   ClerkProvider,
+  ClerkLoaded,
+  ClerkLoading,
 } from '@clerk/nextjs'
 import { Navbar } from "@/components/navbar";
+import Loading from "@/components/Loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,25 +32,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-    >
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-
-        > <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-           <Navbar />
-            {children}
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="bg-background font-sans antialiased">
+        <ClerkProvider>
+          <ClerkLoaded>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <Navbar />
+              {children}
+            </ThemeProvider>
+          </ClerkLoaded>
+          <ClerkLoading><Loading /></ClerkLoading>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

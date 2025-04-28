@@ -11,6 +11,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 
+/**
+ * 
+ * 
+ * use user hook to get user data and display it in the navbar
+ */
+
 export function Navbar() {
   const pathname = usePathname()
   const { setTheme, theme } = useTheme()
@@ -34,22 +40,11 @@ export function Navbar() {
       <div className="container mx-auto w-[85%] flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-bold text-xl">
-            Lawsuit Manager
+            Justi-Fi
           </Link>
 
           <nav className="hidden md:flex gap-6">
-            {routes.map((route) => (
-              <Link
-                key={route.href}
-                href={route.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  route.active ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                {route.label}
-              </Link>
-            ))}
+            
             <SignedIn>
               <Link
                 href="/user-profile"
