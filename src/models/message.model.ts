@@ -6,7 +6,7 @@ export interface IMessage extends Document {
   thread:    Types.ObjectId;           // which thread this message belongs to
   space:     Types.ObjectId;           // the parent space
   sender:    Types.ObjectId;           // which user (clerk) sent it
-  role:      "user" | "agent";         // same as before
+  role:      "HumanMessage" | "AIMessage";         // same as before
   content:   string;                   // the message text
   createdAt: Date;                     // auto-timestamp
   updatedAt: Date;                     // auto-timestamp
