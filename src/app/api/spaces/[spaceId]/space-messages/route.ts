@@ -12,19 +12,19 @@ import Message from "@/models/message.model";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest, props: { params: Promise<{ spaceId: string }> }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ spaceId: string, user_id: string }> }) {
     const params = await props.params;
-    const { spaceId } = params;
+    const { spaceId, user_id } = params;
     console.log("[threads] 🔔 GET messages for space:", spaceId);
 
-    const { userId: clerkId } = getAuth(req);
-    if (!clerkId) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const { userId: clerkId } = getAuth(req);
+    // if (!clerkId) {
+    //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     await connectToDB();
 
-    const user = await User.findOne({ clerkId });
+    const user = await User.findOne({ clerkId: user_id });
     if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
