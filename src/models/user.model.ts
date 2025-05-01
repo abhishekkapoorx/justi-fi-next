@@ -1,16 +1,14 @@
-// models/User.ts
-
 import mongoose, { Document, Schema, Model } from "mongoose";
 
 export interface IUser extends Document {
-  clerkId: string;      // Clerk’s user.id
-  email: string;        // Primary email address
-  firstName?: string;   // event.data.first_name
-  lastName?: string;    // event.data.last_name
-  username?: string;    // event.data.username
-  imageUrl?: string;    // event.data.image_url
-  createdAt: Date;      // when this record was created in your DB
-  updatedAt: Date;      // when this record was last updated in your DB
+  clerkId: string;      
+  email: string;        
+  firstName?: string;   
+  lastName?: string;    
+  username?: string;    
+  imageUrl?: string;    
+  createdAt: Date;      
+  updatedAt: Date;      
 }
 
 const UserSchema = new Schema<IUser>(
