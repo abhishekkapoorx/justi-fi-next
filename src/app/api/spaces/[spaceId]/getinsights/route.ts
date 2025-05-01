@@ -62,7 +62,7 @@ export async function GET(
     console.error("[getinsights] ❌ Error fetching insights:", error);
     return NextResponse.json({ 
       error: "Failed to fetch insights", 
-      details: error.message 
+      details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
 }
