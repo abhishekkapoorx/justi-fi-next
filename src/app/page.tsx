@@ -1,11 +1,28 @@
-
+import OneStop from "@/components/Home/OneStop";
+import Optimize from "@/components/Home/Optimize";
+import WhyPartner from "@/components/Home/WhyPartner";
+import ManageTax from "@/components/Home/ManageCases";
+import WhoWeHelp from "@/components/Home/WhoWeHelp";
+import HomeHero from "@/components/Home/HomeHero";
+import Tools from "@/components/Home/Tools";
+import Faqs from "@/components/Home/Faqs";
+import Testimonials from "@/components/Home/Testimonials";
+import Pricing from "@/components/Home/Pricing";
+import Blog from "@/components/Home/Blog"
 export default function Home() {
   return (
-    <>
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <h1 className="text-3xl font-bold">Welcome to Justi-Fi</h1>
-        <p className="mt-4 text-lg">Your one-stop solution for financial justice.</p>
-      </div>
-    </>
+    <div className="">
+      <HomeHero />
+      <Tools />
+      <WhoWeHelp />
+      <ManageTax />
+      <OneStop />
+      <WhyPartner />
+      {/* <Testimonials /> */}
+      {/* <Pricing /> */}
+      {/* <Blog/> */}
+      {/* <Faqs /> */}
+      <Optimize />
+    </div>
   );
 }
