@@ -6,6 +6,7 @@ import { connectToDB } from "@/lib/mongoose";
 import Thread from "@/models/threads.model";
 import { Space } from "@/models/spaces.model";
 import User from "@/models/user.model";
+import { Types } from "mongoose";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,7 +75,7 @@ export async function POST(
     messages: [],
   });
 
-  space.threads.push(thread._id);
+  space.threads.push(thread._id as unknown as Types.ObjectId);
   await space.save();
 
   return NextResponse.json(thread, { status: 201 });

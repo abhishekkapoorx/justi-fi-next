@@ -6,6 +6,7 @@ import { connectToDB } from "@/lib/mongoose";
 import { Space } from "@/models/spaces.model";
 import User from "@/models/user.model";
 import { DocumentModel as Document } from "@/models/documents.model";
+import { Types } from "mongoose";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,7 +114,7 @@ export async function POST(
     createdBy: user._id,
   });
 
-  space.documents.push(doc._id);
+  space.documents.push(doc._id as unknown as Types.ObjectId);
   await space.save();
 
   console.log("[docs] 🎉 Created document:", doc._id);
