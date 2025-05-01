@@ -11,29 +11,10 @@ export interface IThread extends Document {
   space:     Types.ObjectId;   
   title:     string;           
   createdBy: Types.ObjectId;   
-  messages:  IMessage[];       
   createdAt: Date;
   updatedAt: Date;
 }
 
-const MessageSchema = new Schema<IMessage>(
-  {
-    role: {
-      type: String,
-      enum: ["user", "agent"],
-      required: true,
-    },
-    content: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-  },
-  {
-    timestamps: { createdAt: true, updatedAt: false },
-    _id:         true,    
-  }
-);
 
 const ThreadSchema = new Schema<IThread>(
   {
@@ -52,10 +33,7 @@ const ThreadSchema = new Schema<IThread>(
       ref: "User",
       required: true,
     },
-    messages: {
-      type: [MessageSchema],
-      default: [],
-    },
+   
   },
   { timestamps: true }
 );
