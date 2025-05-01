@@ -26,7 +26,7 @@ export default function SpaceLayout({
           </Link>
         </Button>
         <Separator orientation="vertical" className="mx-2 h-6" />
-        <div className="font-medium">Space {params.id}</div>
+        {/* <div className="font-medium">Space {params.id}</div> */}
       </header>
 
       {/* Main content */}

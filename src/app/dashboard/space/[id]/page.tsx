@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,39 +19,114 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileText, MessageSquare, Plus, Upload } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, MessageSquare, Plus, Upload } from "lucide-react";
 
-// Mock data
-const documents = [
-  { id: "1", name: "Contract.pdf", date: "2023-04-15" },
-  { id: "2", name: "Evidence.docx", date: "2023-04-16" },
-  { id: "3", name: "Testimony.pdf", date: "2023-04-17" },
-]
+interface DocumentItem {
+  _id: string;
+  title: string;
+  secureUrl: string;
+  createdAt: string;
+}
 
-const threads = [
-  { id: "1", name: "Initial Case Review", date: "2023-04-15" },
-  { id: "2", name: "Client Meeting Notes", date: "2023-04-18" },
-]
+interface ThreadItem {
+  _id: string;
+  title: string;
+  createdAt: string;
+}
 
-export default function SpacePage({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState("documents")
+type Props = { params: { id: string } };
+
+export default function SpacePage({ params }: Props) {
+  const { id: spaceId } = params;
+  const router = useRouter();
+
+  const [docs, setDocs] = useState<DocumentItem[]>([]);
+  const [threads, setThreads] = useState<ThreadItem[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+  const [loadingThreads, setLoadingThreads] = useState(true);
+
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [threadOpen, setThreadOpen] = useState(false);
+  const [newThreadName, setNewThreadName] = useState("");
+
+  // fetch documents
+  useEffect(() => {
+    setLoadingDocs(true);
+    fetch(`/api/spaces/${spaceId}/documents`)
+      .then((res) => res.json())
+      .then((data: DocumentItem[]) => setDocs(data))
+      .catch((e) => console.error("Failed loading docs", e))
+      .finally(() => setLoadingDocs(false));
+  }, [spaceId]);
+
+  // fetch threads
+  useEffect(() => {
+    setLoadingThreads(true);
+    fetch(`/api/spaces/${spaceId}/threads`)
+      .then((res) => res.json())
+      .then((data: ThreadItem[]) => setThreads(data))
+      .catch((e) => console.error("Failed loading threads", e))
+      .finally(() => setLoadingThreads(false));
+  }, [spaceId]);
+
+  // handle file upload
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    const res = await fetch(`/api/spaces/${spaceId}/documents`, {
+      method: "POST",
+      body: formData,
+    });
+    if (res.ok) {
+      const doc: DocumentItem = await res.json();
+      setDocs((prev) => [doc, ...prev]);
+      setUploadOpen(false);
+      setSelectedFile(null);
+    } else {
+      console.error("Upload failed", await res.json());
+    }
+  };
+
+  // handle new thread creation
+  const handleCreateThread = async () => {
+    if (!newThreadName.trim()) return;
+    const res = await fetch(`/api/spaces/${spaceId}/threads`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newThreadName }),
+    });
+    if (res.ok) {
+      const thread: ThreadItem = await res.json();
+      setThreads((prev) => [thread, ...prev]);
+      setThreadOpen(false);
+      setNewThreadName("");
+      // navigate into newly created thread
+      router.push(`/dashboard/space/${spaceId}/thread/${thread._id}`);
+    } else {
+      console.error("Thread creation failed", await res.json());
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full overflow-auto">
-      {/* Left column: Documents and Case Insights */}
+      {/* Left column */}
       <div className="flex flex-col gap-4">
-        {/* Documents section */}
+        {/* Documents */}
         <Card className="flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex items-center justify-between pb-2">
             <div>
               <CardTitle className="text-lg">Documents</CardTitle>
               <CardDescription>Case-related documents</CardDescription>
             </div>
-            <Dialog>
+            <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Upload className="mr-2 h-4 w-4" />
@@ -54,38 +136,63 @@ export default function SpacePage({ params }: { params: { id: string } }) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Upload Document</DialogTitle>
-                  <DialogDescription>Upload a document to this case space.</DialogDescription>
+                  <DialogDescription>
+                    Upload a document to this case space.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="file">File</Label>
-                    <Input id="file" type="file" />
+                    <Input
+                      id="file"
+                      type="file"
+                      onChange={(e) =>
+                        setSelectedFile(e.target.files?.[0] || null)
+                      }
+                    />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button>Upload</Button>
+                  <Button onClick={handleUpload} disabled={!selectedFile}>
+                    Upload
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </CardHeader>
           <CardContent>
-            {documents.length > 0 ? (
+            {loadingDocs ? (
+              <p>Loading…</p>
+            ) : docs.length > 0 ? (
               <div className="space-y-2">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer">
+                {docs.map((doc) => (
+                  <a
+                    key={doc._id}
+                    href={doc.secureUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
+                  >
                     <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
                     <div className="flex-1">
-                      <div className="font-medium">{doc.name}</div>
-                      <div className="text-xs text-muted-foreground">{doc.date}</div>
+                      <div className="font-medium">{doc.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(doc.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground">No documents yet</p>
-                <Button variant="outline" size="sm" className="mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setUploadOpen(true)}
+                >
                   <Upload className="mr-2 h-4 w-4" />
                   Upload Document
                 </Button>
@@ -94,11 +201,13 @@ export default function SpacePage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
 
-        {/* Case Insights section */}
+        {/* Case Insights (static for now) */}
         <Card className="flex-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Case Insights</CardTitle>
-            <CardDescription>AI-generated insights from your documents</CardDescription>
+            <CardDescription>
+              AI-generated insights from your documents
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="summary">
@@ -111,17 +220,15 @@ export default function SpacePage({ params }: { params: { id: string } }) {
                 <div className="rounded-md bg-muted p-4">
                   <h4 className="font-medium mb-2">Case Overview</h4>
                   <p className="text-sm text-muted-foreground">
-                    This case involves a contract dispute between Smith and Johnson regarding the delivery of services.
+                    {/* Replace with real data */}
+                    This case involves a contract dispute…
                   </p>
                 </div>
                 <div className="rounded-md bg-muted p-4">
                   <h4 className="font-medium mb-2">Key Dates</h4>
                   <p className="text-sm text-muted-foreground">
-                    Contract signed: Jan 15, 2023
-                    <br />
-                    Dispute arose: Mar 22, 2023
-                    <br />
-                    Filing date: Apr 10, 2023
+                    {/* Replace with real data */}
+                    Contract signed: Jan 15, 2023…
                   </p>
                 </div>
               </TabsContent>
@@ -129,9 +236,8 @@ export default function SpacePage({ params }: { params: { id: string } }) {
                 <div className="rounded-md bg-muted p-4">
                   <h4 className="font-medium mb-2">Supporting Arguments</h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
+                    {/* Replace with real data */}
                     <li>• Contract clearly states delivery timeline</li>
-                    <li>• Payment was made in full and on time</li>
-                    <li>• Multiple documented attempts to resolve</li>
                   </ul>
                 </div>
               </TabsContent>
@@ -139,9 +245,8 @@ export default function SpacePage({ params }: { params: { id: string } }) {
                 <div className="rounded-md bg-muted p-4">
                   <h4 className="font-medium mb-2">Opposition Arguments</h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
+                    {/* Replace with real data */}
                     <li>• Force majeure clause may apply</li>
-                    <li>• Delivery specifications were changed</li>
-                    <li>• Communication delays from both parties</li>
                   </ul>
                 </div>
               </TabsContent>
@@ -152,12 +257,12 @@ export default function SpacePage({ params }: { params: { id: string } }) {
 
       {/* Right column: Threads */}
       <Card className="h-full overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex items-center justify-between pb-2">
           <div>
             <CardTitle className="text-lg">Threads</CardTitle>
             <CardDescription>AI-assisted conversations</CardDescription>
           </div>
-          <Dialog>
+          <Dialog open={threadOpen} onOpenChange={setThreadOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
@@ -167,40 +272,58 @@ export default function SpacePage({ params }: { params: { id: string } }) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Thread</DialogTitle>
-                <DialogDescription>Start a new conversation about this case.</DialogDescription>
+                <DialogDescription>
+                  Start a new conversation about this case.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="thread-name">Thread Name</Label>
-                  <Input id="thread-name" placeholder="e.g., Contract Analysis" />
+                  <Input
+                    id="thread-name"
+                    placeholder="e.g., Contract Analysis"
+                    value={newThreadName}
+                    onChange={(e) => setNewThreadName(e.target.value)}
+                  />
                 </div>
               </div>
               <DialogFooter>
-                <Button>Create Thread</Button>
+                <Button onClick={handleCreateThread}>Create Thread</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </CardHeader>
         <CardContent className="h-[calc(100%-5rem)] overflow-auto">
-          {threads.length > 0 ? (
-            <div className="space-y-2">
-              {threads.map((thread) => (
-                <Link key={thread.id} href={`/dashboard/space/${params.id}/thread/${thread.id}`} className="block">
-                  <div className="flex items-center p-3 rounded-md hover:bg-muted cursor-pointer">
-                    <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div className="flex-1">
-                      <div className="font-medium">{thread.name}</div>
-                      <div className="text-xs text-muted-foreground">{thread.date}</div>
+          {loadingThreads ? (
+            <p>Loading…</p>
+          ) : threads.length > 0 ? (
+            threads.map((thread) => (
+              <Link
+                key={thread._id}
+                href={`/dashboard/space/${spaceId}/thread/${thread._id}`}
+                className="block"
+              >
+                <div className="flex items-center p-3 rounded-md hover:bg-muted cursor-pointer">
+                  <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="font-medium">{thread.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(thread.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
+                </div>
+              </Link>
+            ))
           ) : (
             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-muted-foreground">No threads yet</p>
-              <Button variant="outline" size="sm" className="mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => setThreadOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Thread
               </Button>
@@ -209,5 +332,5 @@ export default function SpacePage({ params }: { params: { id: string } }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
