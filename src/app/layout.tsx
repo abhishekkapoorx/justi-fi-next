@@ -9,6 +9,7 @@ import {
 } from '@clerk/nextjs'
 import { Navbar } from "@/components/navbar";
 import Loading from "@/components/Loading";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Navbar />
               {children}
+              <Footer />
             </ThemeProvider>
           </ClerkLoaded>
           <ClerkLoading><Loading /></ClerkLoading>
