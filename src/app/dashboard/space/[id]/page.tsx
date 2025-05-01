@@ -1,16 +1,10 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect, use } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -19,111 +13,114 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MessageSquare, Plus, Upload } from "lucide-react";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FileText, MessageSquare, Plus, Upload } from "lucide-react"
 
 interface DocumentItem {
-  _id: string;
-  title: string;
-  secureUrl: string;
-  createdAt: string;
+  _id: string
+  title: string
+  secureUrl: string
+  createdAt: string
 }
 
 interface ThreadItem {
-  _id: string;
-  title: string;
-  createdAt: string;
+  _id: string
+  title: string
+  createdAt: string
 }
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> }
 
-export default function SpacePage({ params }: Props) {
-  const { id: spaceId } = params;
-  const router = useRouter();
+export default function SpacePage(props: Props) {
+  const params = use(props.params)
+  const { id: spaceId } = params
+  const router = useRouter()
 
-  const [docs, setDocs] = useState<DocumentItem[]>([]);
-  const [threads, setThreads] = useState<ThreadItem[]>([]);
-  const [loadingDocs, setLoadingDocs] = useState(true);
-  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [docs, setDocs] = useState<DocumentItem[]>([])
+  const [threads, setThreads] = useState<ThreadItem[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(true)
+  const [loadingThreads, setLoadingThreads] = useState(true)
 
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const [threadOpen, setThreadOpen] = useState(false);
-  const [newThreadName, setNewThreadName] = useState("");
+  const [threadOpen, setThreadOpen] = useState(false)
+  const [newThreadName, setNewThreadName] = useState("")
 
   // fetch documents
   useEffect(() => {
-    setLoadingDocs(true);
+    setLoadingDocs(true)
     fetch(`/api/spaces/${spaceId}/documents`)
       .then((res) => res.json())
       .then((data: DocumentItem[]) => setDocs(data))
       .catch((e) => console.error("Failed loading docs", e))
-      .finally(() => setLoadingDocs(false));
-  }, [spaceId]);
+      .finally(() => setLoadingDocs(false))
+  }, [spaceId])
 
   // fetch threads
   useEffect(() => {
-    setLoadingThreads(true);
+    setLoadingThreads(true)
     fetch(`/api/spaces/${spaceId}/threads`)
       .then((res) => res.json())
       .then((data: ThreadItem[]) => setThreads(data))
       .catch((e) => console.error("Failed loading threads", e))
-      .finally(() => setLoadingThreads(false));
-  }, [spaceId]);
+      .finally(() => setLoadingThreads(false))
+  }, [spaceId])
 
   // handle file upload
   const handleUpload = async () => {
-    if (!selectedFile) return;
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+    if (!selectedFile) return
+    const formData = new FormData()
+    formData.append("file", selectedFile)
 
     const res = await fetch(`/api/spaces/${spaceId}/documents`, {
       method: "POST",
       body: formData,
-    });
+    })
     if (res.ok) {
-      const doc: DocumentItem = await res.json();
-      setDocs((prev) => [doc, ...prev]);
-      setUploadOpen(false);
-      setSelectedFile(null);
+      const doc: DocumentItem = await res.json()
+      setDocs((prev) => [doc, ...prev])
+      setUploadOpen(false)
+      setSelectedFile(null)
     } else {
-      console.error("Upload failed", await res.json());
+      console.error("Upload failed", await res.json())
     }
-  };
+  }
 
   // handle new thread creation
   const handleCreateThread = async () => {
-    if (!newThreadName.trim()) return;
+    if (!newThreadName.trim()) return
     const res = await fetch(`/api/spaces/${spaceId}/threads`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: newThreadName }),
-    });
+    })
     if (res.ok) {
-      const thread: ThreadItem = await res.json();
-      setThreads((prev) => [thread, ...prev]);
-      setThreadOpen(false);
-      setNewThreadName("");
+      const thread: ThreadItem = await res.json()
+      setThreads((prev) => [thread, ...prev])
+      setThreadOpen(false)
+      setNewThreadName("")
       // navigate into newly created thread
-      router.push(`/dashboard/space/${spaceId}/thread/${thread._id}`);
+      router.push(`/dashboard/space/${spaceId}/thread/${thread._id}`)
     } else {
-      console.error("Thread creation failed", await res.json());
+      console.error("Thread creation failed", await res.json())
     }
-  };
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full overflow-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full w-full overflow-auto">
       {/* Left column */}
       <div className="flex flex-col gap-4">
         {/* Documents */}
         <Card className="flex-1">
           <CardHeader className="flex items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-lg">Documents</CardTitle>
+              <Link href={`/dashboard/space/${spaceId}/documents`}>
+                <CardTitle className="text-lg hover:text-primary cursor-pointer">Documents</CardTitle>
+              </Link>
               <CardDescription>Case-related documents</CardDescription>
             </div>
             <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
@@ -136,20 +133,12 @@ export default function SpacePage({ params }: Props) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Upload Document</DialogTitle>
-                  <DialogDescription>
-                    Upload a document to this case space.
-                  </DialogDescription>
+                  <DialogDescription>Upload a document to this case space.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="file">File</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      onChange={(e) =>
-                        setSelectedFile(e.target.files?.[0] || null)
-                      }
-                    />
+                    <Input id="file" type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
                   </div>
                 </div>
                 <DialogFooter>
@@ -160,7 +149,7 @@ export default function SpacePage({ params }: Props) {
               </DialogContent>
             </Dialog>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-[300px] overflow-y-auto">
             {loadingDocs ? (
               <p>Loading…</p>
             ) : docs.length > 0 ? (
@@ -187,12 +176,7 @@ export default function SpacePage({ params }: Props) {
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground">No documents yet</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setUploadOpen(true)}
-                >
+                <Button variant="outline" size="sm" className="mt-4" onClick={() => setUploadOpen(true)}>
                   <Upload className="mr-2 h-4 w-4" />
                   Upload Document
                 </Button>
@@ -204,12 +188,12 @@ export default function SpacePage({ params }: Props) {
         {/* Case Insights (static for now) */}
         <Card className="flex-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Case Insights</CardTitle>
-            <CardDescription>
-              AI-generated insights from your documents
-            </CardDescription>
+            <Link href={`/dashboard/space/${spaceId}/insights`}>
+              <CardTitle className="text-lg hover:text-primary cursor-pointer">Case Insights</CardTitle>
+            </Link>
+            <CardDescription>AI-generated insights from your documents</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-[300px] overflow-y-auto">
             <Tabs defaultValue="summary">
               <TabsList className="grid grid-cols-3 mb-4">
                 <TabsTrigger value="summary">Summary</TabsTrigger>
@@ -259,7 +243,9 @@ export default function SpacePage({ params }: Props) {
       <Card className="h-full overflow-hidden">
         <CardHeader className="flex items-center justify-between pb-2">
           <div>
-            <CardTitle className="text-lg">Threads</CardTitle>
+            <Link href={`/dashboard/space/${spaceId}/threads`}>
+              <CardTitle className="text-lg hover:text-primary cursor-pointer">Threads</CardTitle>
+            </Link>
             <CardDescription>AI-assisted conversations</CardDescription>
           </div>
           <Dialog open={threadOpen} onOpenChange={setThreadOpen}>
@@ -272,9 +258,7 @@ export default function SpacePage({ params }: Props) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Thread</DialogTitle>
-                <DialogDescription>
-                  Start a new conversation about this case.
-                </DialogDescription>
+                <DialogDescription>Start a new conversation about this case.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -284,25 +268,28 @@ export default function SpacePage({ params }: Props) {
                     placeholder="e.g., Contract Analysis"
                     value={newThreadName}
                     onChange={(e) => setNewThreadName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newThreadName.trim()) {
+                        handleCreateThread()
+                      }
+                    }}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateThread}>Create Thread</Button>
+                <Button onClick={handleCreateThread} disabled={!newThreadName.trim()}>
+                  Create Thread
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </CardHeader>
-        <CardContent className="h-[calc(100%-5rem)] overflow-auto">
+        <CardContent className="h-[calc(100%-5rem)] overflow-y-auto">
           {loadingThreads ? (
             <p>Loading…</p>
           ) : threads.length > 0 ? (
             threads.map((thread) => (
-              <Link
-                key={thread._id}
-                href={`/dashboard/space/${spaceId}/thread/${thread._id}`}
-                className="block"
-              >
+              <Link key={thread._id} href={`/dashboard/space/${spaceId}/thread/${thread._id}`} className="block">
                 <div className="flex items-center p-3 rounded-md hover:bg-muted cursor-pointer">
                   <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
                   <div className="flex-1">
@@ -318,12 +305,7 @@ export default function SpacePage({ params }: Props) {
             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-muted-foreground">No threads yet</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => setThreadOpen(true)}
-              >
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setThreadOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Thread
               </Button>
@@ -332,5 +314,5 @@ export default function SpacePage({ params }: Props) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

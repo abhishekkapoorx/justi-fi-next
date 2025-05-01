@@ -11,10 +11,8 @@ import { Types } from "mongoose";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { spaceId: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ spaceId: string }> }) {
+  const params = await props.params;
   const { spaceId } = params;
   console.log("[threads] 🔔 GET threads for space:", spaceId);
 
@@ -39,10 +37,8 @@ export async function GET(
   return NextResponse.json(threads, { status: 200 });
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { spaceId: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ spaceId: string }> }) {
+  const params = await props.params;
   const { spaceId } = params;
   console.log("[threads] 🔔 POST new thread in space:", spaceId);
 
