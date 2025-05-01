@@ -82,7 +82,7 @@ export async function GET(
     console.error("[messages] ❌ Error in GET messages:", error);
     return NextResponse.json({ 
       error: "Failed to fetch messages", 
-      details: error.message 
+      details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
 }
@@ -278,7 +278,7 @@ export async function POST(
     console.error("[messages] ❌ Error in POST message:", error);
     return NextResponse.json({ 
       error: "Failed to create message", 
-      details: error.message 
+      details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
 }
