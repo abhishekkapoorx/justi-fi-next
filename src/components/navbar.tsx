@@ -79,7 +79,7 @@ export function Navbar() {
 
                 <SignedOut>
                   <Link href="/sign-in" onClick={() => setOpen(false)}>
-                    <Button className="w-full" size="sm">
+                    <Button className="w-full cursor-pointer" size="sm">
                       Sign In
                     </Button>
                   </Link>
