@@ -195,7 +195,6 @@ export function AppSidebar() {
                 <div className="px-4 py-2 text-sm text-muted-foreground">No spaces found. Create one below.</div>
               )}
               {spaces.map((space) => (
-                <Link key={space._id} href={`/dashboard/space/${space._id}`} className="w-full">
                 <Collapsible
                   key={space._id}
                   open={expandedSpaces[space._id]}
@@ -209,7 +208,9 @@ export function AppSidebar() {
                         className="flex items-center"
                       >
                         <FolderOpen className="mr-2 h-4 w-4" />
-                        <span className="flex-1 truncate">{space.spaceName}</span>
+                        <Link key={space._id} href={`/dashboard/space/${space._id}`} className="w-full">
+                          <span className="flex-1 truncate">{space.spaceName}</span>
+                        </Link>
                         <ChevronDown
                           className={cn(
                             "h-4 w-4 transition-transform duration-200",
@@ -272,7 +273,7 @@ export function AppSidebar() {
                                     className={cn(
                                       "flex items-center text-xs rounded-md px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                       pathname?.includes(`/thread/${thread._id}`) &&
-                                        "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+                                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
                                     )}
                                   >
                                     <span className="truncate">{thread.title}</span>
@@ -289,7 +290,7 @@ export function AppSidebar() {
                     </CollapsibleContent>
                   </SidebarMenuItem>
                 </Collapsible>
-                </Link>
+
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

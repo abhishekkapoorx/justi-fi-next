@@ -46,9 +46,11 @@ export default function SpacePage(props: Props) {
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const [threadOpen, setThreadOpen] = useState(false)
   const [newThreadName, setNewThreadName] = useState("")
+  const [isCreatingThread, setIsCreatingThread] = useState(false)
 
   // fetch documents
   useEffect(() => {
@@ -73,40 +75,56 @@ export default function SpacePage(props: Props) {
   // handle file upload
   const handleUpload = async () => {
     if (!selectedFile) return
+    setIsUploading(true)
+    
     const formData = new FormData()
     formData.append("file", selectedFile)
 
-    const res = await fetch(`/api/spaces/${spaceId}/documents`, {
-      method: "POST",
-      body: formData,
-    })
-    if (res.ok) {
-      const doc: DocumentItem = await res.json()
-      setDocs((prev) => [doc, ...prev])
-      setUploadOpen(false)
-      setSelectedFile(null)
-    } else {
-      console.error("Upload failed", await res.json())
+    try {
+      const res = await fetch(`/api/spaces/${spaceId}/documents`, {
+        method: "POST",
+        body: formData,
+      })
+      if (res.ok) {
+        const doc: DocumentItem = await res.json()
+        setDocs((prev) => [doc, ...prev])
+        setUploadOpen(false)
+        setSelectedFile(null)
+      } else {
+        console.error("Upload failed", await res.json())
+      }
+    } catch (error) {
+      console.error("Upload error:", error)
+    } finally {
+      setIsUploading(false)
     }
   }
 
   // handle new thread creation
   const handleCreateThread = async () => {
     if (!newThreadName.trim()) return
-    const res = await fetch(`/api/spaces/${spaceId}/threads`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newThreadName }),
-    })
-    if (res.ok) {
-      const thread: ThreadItem = await res.json()
-      setThreads((prev) => [thread, ...prev])
-      setThreadOpen(false)
-      setNewThreadName("")
-      // navigate into newly created thread
-      router.push(`/dashboard/space/${spaceId}/thread/${thread._id}`)
-    } else {
-      console.error("Thread creation failed", await res.json())
+    setIsCreatingThread(true)
+    
+    try {
+      const res = await fetch(`/api/spaces/${spaceId}/threads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newThreadName }),
+      })
+      if (res.ok) {
+        const thread: ThreadItem = await res.json()
+        setThreads((prev) => [thread, ...prev])
+        setThreadOpen(false)
+        setNewThreadName("")
+        // navigate into newly created thread
+        router.push(`/dashboard/space/${spaceId}/thread/${thread._id}`)
+      } else {
+        console.error("Thread creation failed", await res.json())
+      }
+    } catch (error) {
+      console.error("Thread creation error:", error)
+    } finally {
+      setIsCreatingThread(false)
     }
   }
 
@@ -125,7 +143,7 @@ export default function SpacePage(props: Props) {
             </div>
             <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" disabled={isUploading}>
                   <Upload className="mr-2 h-4 w-4" />
                   Upload
                 </Button>
@@ -142,8 +160,8 @@ export default function SpacePage(props: Props) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleUpload} disabled={!selectedFile}>
-                    Upload
+                  <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+                    {isUploading ? "Uploading..." : "Upload"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -250,7 +268,7 @@ export default function SpacePage(props: Props) {
           </div>
           <Dialog open={threadOpen} onOpenChange={setThreadOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" disabled={isCreatingThread}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Thread
               </Button>
@@ -277,8 +295,8 @@ export default function SpacePage(props: Props) {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateThread} disabled={!newThreadName.trim()}>
-                  Create Thread
+                <Button onClick={handleCreateThread} disabled={!newThreadName.trim() || isCreatingThread}>
+                  {isCreatingThread ? "Creating..." : "Create Thread"}
                 </Button>
               </DialogFooter>
             </DialogContent>
