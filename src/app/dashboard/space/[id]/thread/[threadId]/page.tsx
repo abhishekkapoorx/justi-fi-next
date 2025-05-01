@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, use } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,11 +30,12 @@ const initialMessages = [
   },
 ]
 
-export default function ThreadPage({
-  params,
-}: {
-  params: { id: string; threadId: string }
-}) {
+export default function ThreadPage(
+  props: {
+    params: Promise<{ id: string; threadId: string }>
+  }
+) {
+  const params = use(props.params);
   const [messages, setMessages] = useState(initialMessages)
   const [newMessage, setNewMessage] = useState("")
 

@@ -9,14 +9,15 @@ export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { spaceId: string; threadId: string } }
+  props: { params: Promise<{ spaceId: string; threadId: string }> }
 ) {
+  const params = await props.params;
   console.log("[messages] 🔔 GET messages for thread:", params.threadId);
   const { userId: clerkId } = getAuth(req);
   if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectToDB();
-  
+
   // Verify user
   const user = await User.findOne({ clerkId });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -30,7 +31,7 @@ export async function GET(
     _id: params.threadId, 
     space: space._id 
   });
-  
+
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
   return NextResponse.json(thread.messages, { status: 200 });
@@ -38,8 +39,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { spaceId: string; threadId: string } }
+  props: { params: Promise<{ spaceId: string; threadId: string }> }
 ) {
+  const params = await props.params;
   console.log("[messages] 🔔 POST new message to thread:", params.threadId);
   const { userId: clerkId } = getAuth(req);
   if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -64,7 +66,7 @@ export async function POST(
     _id: params.threadId, 
     space: space._id 
   });
-  
+
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
   // Create new message

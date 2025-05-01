@@ -1,7 +1,20 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import axios from "axios";
+import { toast } from "sonner";
+import JustiFiLogo from "@/components/JustiFiLogo";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -10,131 +23,146 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { FileText, FolderPlus } from "lucide-react"
-import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
-import axios from "axios"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FolderPlus } from "lucide-react";
 
 interface Space {
   _id: string;
   spaceName: string;
-  owner: string;
+  createdAt: string;
 }
 
 export default function DashboardPage() {
-  const pathname = usePathname()
-  const [isCreateSpaceOpen, setIsCreateSpaceOpen] = useState(false)
-  const [newSpaceName, setNewSpaceName] = useState("")
-  const [spaces, setSpaces] = useState<Space[]>([])
-  const [loading, setLoading] = useState(true)
+  const pathname = usePathname();
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Function to check if a path is active
-  const isActive = (path: string) => {
-    return pathname === path || pathname?.startsWith(path + "/")
-  }
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
 
-  // Fetch spaces from API
+  // fetch spaces
   const fetchSpaces = async () => {
+    setLoading(true);
     try {
-      setLoading(true)
-      const response = await axios.get('/api/spaces')
-      setSpaces(response.data)
-    } catch (error) {
-      console.error("Failed to fetch spaces:", error)
-      toast("Failed to load your spaces. Please try again.")
+      const res = await axios.get<Space[]>("/api/spaces");
+      setSpaces(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load spaces");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Handle space creation
-  const handleCreateSpace = async () => {
-    if (!newSpaceName.trim()) return
-
+  // create space
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setLoading(true);
     try {
-      setLoading(true)
-      const response = await axios.post('/api/spaces', { spaceName: newSpaceName })
-      setSpaces(prevSpaces => [response.data, ...prevSpaces])
-      setNewSpaceName("")
-      toast("Space created successfully")
-    } catch (error) {
-      console.error("Failed to create space:", error)
-      toast("Failed to create space. Please try again.")
+      const res = await axios.post<Space>("/api/spaces", {
+        spaceName: newName.trim(),
+      });
+      setSpaces((s) => [res.data, ...s]);
+      setNewName("");
+      setCreateOpen(false);
+      toast.success("Space created");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create");
     } finally {
-      setLoading(false)
-      setIsCreateSpaceOpen(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Load spaces on component mount
   useEffect(() => {
-    fetchSpaces()
-  }, [])
+    fetchSpaces();
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to LegalAssist</CardTitle>
-          <CardDescription>Organize your legal cases in dedicated spaces</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center py-6">
-          <div className="rounded-full bg-muted p-6 mb-4">
-            <FileText className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <p className="text-center text-muted-foreground mb-4">
-            You don't have any spaces yet. Create a space to start organizing your cases.
-          </p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Dialog open={isCreateSpaceOpen} onOpenChange={(open) => {
-            if (!loading) {
-              setIsCreateSpaceOpen(open)
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button disabled={loading}>
-                <FolderPlus className="mr-2 h-4 w-4" />
-                Create Your First Space
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Space</DialogTitle>
-                <DialogDescription>Enter a name for your new case space.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="space-name">Space Name</Label>
-                  <Input
-                    id="space-name"
-                    placeholder="e.g., Smith v. Johnson"
-                    value={newSpaceName}
-                    onChange={(e) => setNewSpaceName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newSpaceName.trim()) {
-                        handleCreateSpace();
-                      }
-                    }}
-                  />
-                </div>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 border-b">
+        <JustiFiLogo className="h-8 w-auto" />
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button variant="secondary" size="sm">
+              <FolderPlus className="mr-2 h-4 w-4" />
+              New Space
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create a New Space</DialogTitle>
+              <DialogDescription>
+                Name your new case workspace.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="space-name">Space Name</Label>
+                <Input
+                  id="space-name"
+                  placeholder="e.g. Smith v. Johnson"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && newName.trim() && handleCreate()
+                  }
+                />
               </div>
-              <DialogFooter>
-                <Button
-                  onClick={handleCreateSpace}
-                  disabled={!newSpaceName.trim() || loading}
-                >
-                  {loading ? 'Creating...' : 'Create Space'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardFooter>
-      </Card>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleCreate} disabled={!newName.trim() || loading}>
+                {loading ? "Creating…" : "Create Space"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 overflow-auto p-6">
+        {loading ? (
+          <p className="text-center">Loading your spaces…</p>
+        ) : spaces.length === 0 ? (
+          <Card className="max-w-md mx-auto text-center">
+            <CardHeader>
+              <CardTitle>No spaces yet</CardTitle>
+              <CardDescription>
+                Create a space to organize your legal cases.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-center">
+              <Button onClick={() => setCreateOpen(true)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                Create Space
+              </Button>
+            </CardFooter>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {spaces.map((space) => (
+              <Link key={space._id} href={`/dashboard/space/${space._id}`}>
+                <Card className={pathname.includes(space._id) ? "border-primary" : ""}>
+                  <CardHeader>
+                    <CardTitle>{space.spaceName}</CardTitle>
+                    <CardDescription>
+                      {new Date(space.createdAt).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Click to open this space.
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
-  )
+  );
 }
