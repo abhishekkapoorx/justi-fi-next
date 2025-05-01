@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, ChevronDown, FileText, Home, Plus, Settings, User } from "lucide-react"
+import { ChevronDown, FileText, Home, Plus, Settings, User } from "lucide-react"
+import axios from "axios"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -24,45 +25,86 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { toast } from "sonner" 
 
-// Mock data for spaces
-const spaces = [
-  { id: "1", name: "Smith v. Johnson" },
-  { id: "2", name: "Estate of Williams" },
-  { id: "3", name: "Corporate Merger A" },
-]
+// Space interface
+interface Space {
+  _id: string;
+  spaceName: string;
+  owner: string;
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
   const [isCreateSpaceOpen, setIsCreateSpaceOpen] = useState(false)
   const [newSpaceName, setNewSpaceName] = useState("")
+  const [spaces, setSpaces] = useState<Space[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Function to check if a path is active
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(path + "/")
   }
 
-  // Handle space creation
-  const handleCreateSpace = () => {
-    // Here you would typically call an API to create the space
-    console.log("Creating space:", newSpaceName)
-    setNewSpaceName("")
-    setIsCreateSpaceOpen(false)
+  // Fetch spaces from API
+  const fetchSpaces = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get('/api/spaces')
+      setSpaces(response.data)
+    } catch (error) {
+      console.error("Failed to fetch spaces:", error)
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to load your spaces. Please try again.",
+      //   variant: "destructive",
+      // })
+      toast("Failed to load your spaces. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
+
+  // Handle space creation
+  const handleCreateSpace = async () => {
+    if (!newSpaceName.trim()) return
+    
+    try {
+      setLoading(true)
+      const response = await axios.post('/api/spaces', { spaceName: newSpaceName })
+      setSpaces(prevSpaces => [response.data, ...prevSpaces])
+      setNewSpaceName("")
+      setIsCreateSpaceOpen(false)
+      // toast({
+      //   title: "Success",
+      //   description: "Space created successfully",
+      // })
+      toast("Space created successfully")
+    } catch (error) {
+      console.error("Failed to create space:", error)
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to create space. Please try again.",
+      //   variant: "destructive",
+      // })
+      toast("Failed to create space. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load spaces on component mount
+  useEffect(() => {
+    fetchSpaces()
+  }, [])
 
   return (
     <Sidebar>
-     
-
       <SidebarContent className="pt-16">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -83,12 +125,20 @@ export function AppSidebar() {
           <SidebarGroupLabel>Spaces</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="">
+              {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Loading spaces...</div>}
+              {!loading && spaces.length === 0 && (
+                <div className="px-4 py-2 text-sm text-muted-foreground">No spaces found. Create one below.</div>
+              )}
               {spaces.map((space) => (
-                <SidebarMenuItem key={space.id}>
-                  <SidebarMenuButton asChild isActive={isActive(`/dashboard/space/${space.id}`)} tooltip={space.name}>
-                    <Link href={`/dashboard/space/${space.id}`}>
+                <SidebarMenuItem key={space._id}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(`/dashboard/space/${space._id}`)} 
+                    tooltip={space.spaceName}
+                  >
+                    <Link href={`/dashboard/space/${space._id}`}>
                       <FileText className="mr-2 h-4 w-4" />
-                      <span>{space.name}</span>
+                      <span>{space.spaceName}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -96,22 +146,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/settings")}>
-                  <Link href="/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
       </SidebarContent>
 
       <SidebarFooter>
@@ -139,45 +173,25 @@ export function AppSidebar() {
                           placeholder="e.g., Smith v. Johnson"
                           value={newSpaceName}
                           onChange={(e) => setNewSpaceName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newSpaceName.trim()) {
+                              handleCreateSpace();
+                            }
+                          }}
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleCreateSpace} disabled={!newSpaceName.trim()}>
-                        Create Space
+                      <Button 
+                        onClick={handleCreateSpace} 
+                        disabled={!newSpaceName.trim() || loading}
+                      >
+                        {loading ? 'Creating...' : 'Create Space'}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </SidebarMenuItem>
-
-              {/* <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton>
-                      <Avatar className="mr-2 h-5 w-5">
-                        <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                        <AvatarFallback>JD</AvatarFallback>
-                      </Avatar>
-                      <span>John Doe</span>
-                      <ChevronDown className="ml-auto h-4 w-4" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -187,3 +201,9 @@ export function AppSidebar() {
     </Sidebar>
   )
 }
+
+
+
+
+
+
