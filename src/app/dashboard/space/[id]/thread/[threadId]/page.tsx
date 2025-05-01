@@ -12,15 +12,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
 interface IMessage {
   _id: string;
   role: "user" | "agent";
   content: string;
   createdAt: string;
+  isLoading?: boolean;
 }
 
 export default function ThreadPage(props: {
@@ -57,6 +59,32 @@ export default function ThreadPage(props: {
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
     setSending(true);
+    
+    const messageText = newMessage.trim();
+    setNewMessage(""); // Clear input immediately
+    
+    // Add user message immediately with temporary ID
+    const tempUserMsgId = uuidv4();
+    const tempAgentMsgId = uuidv4();
+    
+    // Create temporary messages
+    const tempUserMessage: IMessage = {
+      _id: tempUserMsgId,
+      role: "user",
+      content: messageText,
+      createdAt: new Date().toISOString(),
+    };
+    
+    const tempAgentMessage: IMessage = {
+      _id: tempAgentMsgId,
+      role: "agent",
+      content: "",
+      createdAt: new Date().toISOString(),
+      isLoading: true,
+    };
+    
+    // Update messages state with temporary messages
+    setMessages(prev => [...prev, tempUserMessage, tempAgentMessage]);
 
     try {
       const res = await fetch(
@@ -64,7 +92,7 @@ export default function ThreadPage(props: {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: newMessage }),
+          body: JSON.stringify({ content: messageText }),
         }
       );
 
@@ -80,14 +108,34 @@ export default function ThreadPage(props: {
         });
       }
       
-      setMessages((prev) => [
-        ...prev,
-        userMessage as IMessage,
-        ...(agentResponse ? [agentResponse as IMessage] : []),
-      ]);
-      setNewMessage("");
+      // Replace temporary messages with real ones from server
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === tempUserMsgId) {
+            return userMessage as IMessage;
+          } else if (msg._id === tempAgentMsgId) {
+            return agentResponse as IMessage;
+          }
+          return msg;
+        })
+      );
     } catch (err) {
       console.error("Send error", err);
+      
+      // Update the temp agent message to show error
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === tempAgentMsgId) {
+            return {
+              ...msg, 
+              content: "I'm sorry, I encountered an error while processing your request.",
+              isLoading: false
+            };
+          }
+          return msg;
+        })
+      );
+      
       toast.error("Failed to send message", {
         description: "Please try again later.",
       });
@@ -138,7 +186,11 @@ export default function ThreadPage(props: {
                           : "bg-muted"
                       }`}
                     >
-                      {msg.role === "agent" ? (
+                      {msg.isLoading ? (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : msg.role === "agent" ? (
                         <div className="markdown-content">
                           <ReactMarkdown
                             components={{
