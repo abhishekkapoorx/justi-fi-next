@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { toast } from "sonner";
 
 interface IMessage {
   _id: string;
@@ -69,7 +70,16 @@ export default function ThreadPage(props: {
 
       if (!res.ok) throw new Error("POST failed");
 
-      const { userMessage, agentResponse } = await res.json();
+      const { userMessage, agentResponse, insightsUpdated } = await res.json();
+      
+      // Show toast notification when insights are updated
+      if (insightsUpdated) {
+        toast.success("Insights updated successfully!", {
+          description: "New insights have been added to your document.",
+          duration: 4000,
+        });
+      }
+      
       setMessages((prev) => [
         ...prev,
         userMessage as IMessage,
@@ -78,14 +88,16 @@ export default function ThreadPage(props: {
       setNewMessage("");
     } catch (err) {
       console.error("Send error", err);
-      // you could show a toast here
+      toast.error("Failed to send message", {
+        description: "Please try again later.",
+      });
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full w-5xl">
+    <div className="flex flex-col h-full w-full">
       <Card className="flex flex-col h-full border-0 rounded-none">
         <CardHeader className="border-b px-4 py-2">
           <CardTitle className="text-lg">Thread #{threadId}</CardTitle>

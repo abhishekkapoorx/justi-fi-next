@@ -7,6 +7,7 @@ import Thread from "@/models/threads.model";
 import { Space } from "@/models/spaces.model";
 import User from "@/models/user.model";
 import Message from "@/models/message.model";
+import Insight from "@/models/insights.model";
 import axios from "axios";
 
 export const runtime = "nodejs";
@@ -165,6 +166,7 @@ export async function POST(
     // talk with llm 
     // Make API call to insights endpoint to get agent response
     let agentResponse = null;
+    let insightsUpdated = false;
     
     if (role === "user") {
       try {
@@ -191,8 +193,60 @@ export async function POST(
         
         console.log("[messages] 📡 Absolute URL:", absoluteUrl);
         const insightResponse = await axios.get(absoluteUrl);
+
+
+        console.log("==============================================================");
+        console.log("[messages] 📡 Insight response:", insightResponse.data);
+        console.log("==============================================================");
         
         if (insightResponse.data) {
+          // Check if response contains summary, positives, and negatives for insights update
+          const { summary, positives, negatives } = insightResponse.data;
+
+          // TODO: check if all need to be present
+          // TODO: check if need to replace with new or interted with existing ones
+
+
+          if (summary && positives && negatives) {
+            try {
+              console.log("[messages] 📊 Updating insights model with new data");
+              
+              // Check if an insight already exists for this thread
+              const existingInsight = await Insight.findOne({ 
+                space: space._id,
+                thread: thread._id
+              });
+              
+              if (existingInsight) {
+                // Update existing insight
+                await Insight.findByIdAndUpdate(existingInsight._id, {
+                  summary,
+                  positives,
+                  negatives
+                });
+                console.log("[messages] 📊 Updated existing insight:", existingInsight._id);
+              } else {
+                // Create new insight
+                const newInsight = await Insight.create({
+                  space: space._id,
+                  thread: thread._id,
+                  createdBy: user._id,
+                  summary,
+                  positives,
+                  negatives,
+                  citations: insightResponse.data.citations || []
+                });
+                console.log("[messages] 📊 Created new insight:", newInsight._id);
+              }
+              
+              // Set flag for frontend notification
+              insightsUpdated = true;
+            } catch (insightError) {
+              console.error("[messages] ❌ Error updating insights model:", insightError);
+              // Don't fail the whole request if insights update fails
+            }
+          }
+          
           agentResponse = await Message.create({
             thread: thread._id,
             space: space._id,
@@ -217,7 +271,8 @@ export async function POST(
     console.log("[messages] 🎉 Created message:", newMessage._id);
     return NextResponse.json({ 
       userMessage: newMessage, 
-      agentResponse 
+      agentResponse,
+      insightsUpdated
     }, { status: 201 });
   } catch (error) {
     console.error("[messages] ❌ Error in POST message:", error);

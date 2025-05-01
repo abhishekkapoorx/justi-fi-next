@@ -1,8 +1,152 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Lightbulb } from "lucide-react"
+import { Lightbulb, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import axios from "axios"
+import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
+import ReactMarkdown from "react-markdown"
+
+interface INegativePoint {
+  _id: string;
+  argument: string;
+  explanation: string;
+  severity: "Critical" | "Significant" | "Moderate" | "Minor";
+  area: string;
+  rebuttal?: {
+    counterargument: string;
+    legal_basis: string;
+    tactical_approach: string;
+    alternative_positions?: string;
+  };
+}
+
+interface ICitation {
+  label: string;
+  url: string;
+}
+
+interface IInsight {
+  _id: string;
+  summary: string;
+  positives: string[];
+  negatives: INegativePoint[];
+  citations: ICitation[];
+  space: string;
+  thread?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function InsightsPage({ params }: { params: { id: string } }) {
+  const [insights, setInsights] = useState<IInsight[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeInsight, setActiveInsight] = useState<IInsight | null>(null);
+
+  // Fetch insights data when component mounts
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/spaces/${params.id}/getinsights`);
+        const data = response.data;
+        
+        if (data.insights && data.insights.length > 0) {
+          setInsights(data.insights);
+          setActiveInsight(data.insights[0]); // Set first insight as active
+        }
+      } catch (error) {
+        console.error("Failed to fetch insights:", error);
+        toast.error("Failed to load insights", {
+          description: "Please try again later."
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInsights();
+  }, [params.id]);
+
+  // Get severity color based on level
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case "Critical": return "bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300";
+      case "Significant": return "bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300";
+      case "Moderate": return "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300";
+      case "Minor": return "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300";
+      default: return "bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-300";
+    }
+  };
+
+  // Loading skeleton UI
+  if (loading) {
+    return (
+      <div className="p-4 h-full overflow-auto">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+
+        <div className="mb-4">
+          <Skeleton className="h-10 w-full mb-4" />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-32 w-full mb-4" />
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!activeInsight) {
+    return (
+      <div className="p-4 h-full overflow-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Case Insights</h1>
+          <p className="text-muted-foreground">AI-generated analysis and key points</p>
+        </div>
+
+        <Card className="flex flex-col items-center justify-center p-10 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No insights available</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            There are no insights available for this case yet. Continue your conversation with the AI assistant to generate insights.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 h-full overflow-auto">
       <div className="mb-6">
@@ -22,38 +166,35 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
             <Card>
               <CardHeader>
                 <CardTitle>Case Overview</CardTitle>
-                <CardDescription>Key facts and timeline</CardDescription>
+                <CardDescription>Key facts and insights</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-md bg-muted p-4">
-                  <p className="text-sm">
-                    This case involves a contract dispute between Smith and Johnson regarding the delivery of services.
-                    The contract was signed on January 15, 2023, and the dispute arose on March 22, 2023, when Johnson
-                    failed to deliver the agreed-upon services by the deadline.
-                  </p>
+                  <div className="prose prose-sm dark:prose-invert">
+                    <ReactMarkdown>
+                      {activeInsight.summary}
+                    </ReactMarkdown>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Timeline</h4>
-                  <ul className="space-y-2">
-                    <li className="flex">
-                      <div className="w-24 font-medium">Jan 15, 2023</div>
-                      <div>Contract signed</div>
-                    </li>
-                    <li className="flex">
-                      <div className="w-24 font-medium">Feb 28, 2023</div>
-                      <div>First milestone deadline</div>
-                    </li>
-                    <li className="flex">
-                      <div className="w-24 font-medium">Mar 22, 2023</div>
-                      <div>Dispute arose</div>
-                    </li>
-                    <li className="flex">
-                      <div className="w-24 font-medium">Apr 10, 2023</div>
-                      <div>Filing date</div>
-                    </li>
-                  </ul>
-                </div>
+                {activeInsight.citations && activeInsight.citations.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Citations</h4>
+                    <ul className="space-y-2">
+                      {activeInsight.citations.map((citation, idx) => (
+                        <li key={idx} className="flex">
+                          <div className="w-24 font-medium">{citation.label}</div>
+                          <div>
+                            <a href={citation.url} target="_blank" rel="noopener noreferrer" 
+                               className="text-blue-500 hover:underline">
+                              {citation.url}
+                            </a>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -64,45 +205,19 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
-                  <li className="flex">
-                    <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Delivery Timeline</p>
-                      <p className="text-sm text-muted-foreground">
-                        The contract specified a delivery date of February 28, 2023, which was not met.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex">
-                    <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Quality of Deliverables</p>
-                      <p className="text-sm text-muted-foreground">
-                        The partial deliverables provided did not meet the specifications outlined in section 2.3 of the
-                        contract.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex">
-                    <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Force Majeure Clause</p>
-                      <p className="text-sm text-muted-foreground">
-                        Johnson claims that supply chain issues constitute a force majeure event under section 8.2 of
-                        the contract.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex">
-                    <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Payment Terms</p>
-                      <p className="text-sm text-muted-foreground">
-                        Smith made the initial payment but is withholding the milestone payment due to incomplete
-                        delivery.
-                      </p>
-                    </div>
-                  </li>
+                  {activeInsight.negatives.slice(0, 4).map((negative, idx) => (
+                    <li key={negative._id || idx} className="flex">
+                      <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">{negative.argument}</p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>
+                            {negative.explanation}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -117,76 +232,39 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="rounded-md bg-muted p-4">
-                  <h3 className="font-medium text-lg mb-2">Contract Language</h3>
-                  <p className="text-sm mb-4">
-                    The contract clearly states in section 3.1 that "time is of the essence" regarding delivery
-                    deadlines, which strengthens our position on the breach of contract claim.
-                  </p>
-                  <div className="bg-background p-3 rounded border text-sm">
-                    <p className="font-medium">Contract Section 3.1:</p>
-                    <p className="italic">
-                      "Contractor agrees that time is of the essence in the performance of this Agreement, and
-                      Contractor's failure to complete the Services by the agreed-upon deadline shall constitute a
-                      material breach of this Agreement."
+                {activeInsight.positives && activeInsight.positives.length > 0 && (
+                  <div className="rounded-md bg-muted p-4">
+                    <h3 className="font-medium text-lg mb-2">Key Strengths</h3>
+                    <p className="text-sm mb-4">
+                      The following points highlight the strengths of your position in this case.
                     </p>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-4">
                   <h3 className="font-medium text-lg">Key Supporting Points</h3>
 
-                  <div className="flex">
-                    <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      1
+                  {activeInsight.positives.map((positive, idx) => (
+                    <div key={idx} className="flex">
+                      <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">Strength Point {idx + 1}</p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>
+                            {positive}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Payment Compliance</p>
-                      <p className="text-sm text-muted-foreground">
-                        Smith made all required payments on time as evidenced by bank statements dated January 16, 2023.
-                        This demonstrates full compliance with payment obligations.
-                      </p>
-                    </div>
-                  </div>
+                  ))}
 
-                  <div className="flex">
-                    <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      2
+                  {activeInsight.positives.length === 0 && (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No supporting points have been identified yet.
                     </div>
-                    <div>
-                      <p className="font-medium">Communication Records</p>
-                      <p className="text-sm text-muted-foreground">
-                        Email correspondence from February 15, 2023, shows that Johnson acknowledged the upcoming
-                        deadline and confirmed they would meet it, contradicting their later claims.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      3
-                    </div>
-                    <div>
-                      <p className="font-medium">Force Majeure Limitations</p>
-                      <p className="text-sm text-muted-foreground">
-                        The force majeure clause specifically excludes "foreseeable supply chain disruptions" which
-                        Johnson had knowledge of prior to signing the contract.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      4
-                    </div>
-                    <div>
-                      <p className="font-medium">Quality Standards</p>
-                      <p className="text-sm text-muted-foreground">
-                        The deliverables provided failed to meet the quality standards explicitly defined in Appendix A
-                        of the contract, as confirmed by independent expert analysis.
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -204,80 +282,44 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
                 <div className="rounded-md bg-muted p-4">
                   <h3 className="font-medium text-lg mb-2">Potential Defense Strategy</h3>
                   <p className="text-sm">
-                    Based on preliminary filings and communications, Johnson is likely to focus on three main arguments
-                    to defend their position.
+                    Based on analysis, these are the key potential counterarguments to your position.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-medium text-lg">Key Opposition Points</h3>
 
-                  <div className="flex">
-                    <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      1
+                  {activeInsight.negatives.map((negative, idx) => (
+                    <div key={negative._id} className="flex">
+                      <div className={`${getSeverityColor(negative.severity)} rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0`}>
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{negative.argument}</p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>
+                            {negative.explanation}
+                          </ReactMarkdown>
+                        </div>
+                        {negative.rebuttal && (
+                          <div className="mt-1">
+                            <span className="font-medium">Counter: </span>
+                            <div className="prose prose-sm dark:prose-invert max-w-none inline">
+                              <ReactMarkdown>
+                                {negative.rebuttal.counterargument}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Force Majeure Application</p>
-                      <p className="text-sm text-muted-foreground">
-                        Johnson will likely argue that global supply chain disruptions constitute an "act beyond
-                        reasonable control" as defined in the force majeure clause.
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium">Counter:</span> The clause specifically excludes foreseeable
-                        disruptions, and evidence shows Johnson was aware of these issues.
-                      </p>
-                    </div>
-                  </div>
+                  ))}
 
-                  <div className="flex">
-                    <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      2
+                  {activeInsight.negatives.length === 0 && (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No opposition arguments have been identified yet.
                     </div>
-                    <div>
-                      <p className="font-medium">Specification Changes</p>
-                      <p className="text-sm text-muted-foreground">
-                        They may claim that Smith requested changes to the original specifications, which necessitated
-                        additional time not accounted for in the original timeline.
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium">Counter:</span> All change requests were minor and documented
-                        through the proper change order process with agreed timelines.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      3
-                    </div>
-                    <div>
-                      <p className="font-medium">Substantial Performance</p>
-                      <p className="text-sm text-muted-foreground">
-                        Johnson may argue that they substantially performed the contract by delivering 70% of the
-                        required services, which should mitigate damages.
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium">Counter:</span> The contract explicitly requires 100% completion
-                        for milestone payments, and the delivered portion had quality issues.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-full h-6 w-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                      4
-                    </div>
-                    <div>
-                      <p className="font-medium">Communication Delays</p>
-                      <p className="text-sm text-muted-foreground">
-                        They may claim that Smith was slow to respond to critical questions, contributing to the delay.
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium">Counter:</span> Communication logs show all inquiries were
-                        answered within the 48-hour window specified in the contract.
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>
