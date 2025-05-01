@@ -10,145 +10,220 @@ import Message from "@/models/message.model";
 import axios from "axios";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { spaceId: string; threadId: string } }
+  { params }: { params: { spaceId: string; threadsId: string } }
 ) {
-  const { spaceId, threadId } = params;
-  console.log("[messages] 🔔 GET messages for thread:", threadId);
+  try {
+    // Await the params and add additional checks
+    const resolvedParams = await params;
+    console.log("=============================================================");
+    console.log("[messages] 🔔 GET messages for thread:", resolvedParams.threadsId, "in space:", resolvedParams.spaceId);
+    console.log("=============================================================");
+    const spaceId = resolvedParams.spaceId;
+    const threadId = resolvedParams.threadsId;
+    
+    // Add extra validation to avoid MongoDB ObjectId errors
+    if (!spaceId || spaceId === 'undefined') {
+      console.error("[messages] ❌ Invalid spaceId:", spaceId);
+      return NextResponse.json({ error: "Invalid space ID" }, { status: 400 });
+    }
+    
+    if (!threadId || threadId === 'undefined') {
+      console.error("[messages] ❌ Invalid threadId:", threadId);
+      return NextResponse.json({ error: "Invalid thread ID" }, { status: 400 });
+    }
+    
+    console.log("[messages] 🔔 GET messages for thread:", threadId, "in space:", spaceId);
 
-  // 1) Auth check
-  const { userId: clerkId } = getAuth(req);
-  if (!clerkId) {
-    console.warn("[messages] 🚫 Unauthorized");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // 1) Auth check
+    const { userId: clerkId } = getAuth(req);
+    if (!clerkId) {
+      console.warn("[messages] 🚫 Unauthorized");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2) Connect
+    await connectToDB();
+
+    // 3) Verify user exists
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      console.warn("[messages] ⚠️ User not found for clerkId:", clerkId);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // 4) Verify space ownership - with additional logging for debugging
+    console.log("[messages] 🔍 Looking for space with _id:", spaceId, "and owner:", user._id);
+    const space = await Space.findOne({ _id: spaceId, owner: user._id });
+    if (!space) {
+      console.warn("[messages] ⚠️ Space not found or not owned by user:", spaceId);
+      return NextResponse.json({ error: "Space not found" }, { status: 404 });
+    }
+
+    // 5) Verify thread belongs to space
+    const thread = await Thread.findOne({ _id: threadId, space: space._id });
+    if (!thread) {
+      console.warn("[messages] ⚠️ Thread not found in space:", threadId);
+      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    }
+
+    // 6) Fetch messages from the separate collection
+    const messages = await Message.find({ thread: thread._id })
+      .sort({ createdAt: 1 })
+      .lean();
+    
+    console.log("[messages] 🎉 Successfully fetched", messages.length, "messages");
+    return NextResponse.json(messages, { status: 200 });
+  } catch (error) {
+    console.error("[messages] ❌ Error in GET messages:", error);
+    return NextResponse.json({ 
+      error: "Failed to fetch messages", 
+      details: error.message 
+    }, { status: 500 });
   }
-
-  // 2) Connect
-  await connectToDB();
-
-  // 3) Verify user exists
-  const user = await User.findOne({ clerkId });
-  if (!user) {
-    console.warn("[messages] ⚠️ User not found for clerkId:", clerkId);
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // 4) Verify space ownership
-  const space = await Space.findOne({ _id: spaceId, owner: user._id });
-  if (!space) {
-    console.warn("[messages] ⚠️ Space not found or not owned by user:", spaceId);
-    return NextResponse.json({ error: "Space not found" }, { status: 404 });
-  }
-
-  // 5) Verify thread belongs to space
-  const thread = await Thread.findOne({ _id: threadId, space: space._id });
-  if (!thread) {
-    console.warn("[messages] ⚠️ Thread not found in space:", threadId);
-    return NextResponse.json({ error: "Thread not found" }, { status: 404 });
-  }
-
-  // 6) Fetch messages from the separate collection
-  const messages = await Message.find({ thread: thread._id })
-    .sort({ createdAt: 1 })
-    .lean();
-  return NextResponse.json(messages, { status: 200 });
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { spaceId: string; threadId: string } }
+  { params }: { params: { spaceId: string; threadsId: string } }
 ) {
-  const { spaceId, threadId } = params;
-  console.log("[messages] 🔔 POST new message to thread:", threadId);
-
-  // 1) Auth check
-  const { userId: clerkId } = getAuth(req);
-  if (!clerkId) {
-    console.warn("[messages] 🚫 Unauthorized");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // 2) Parse request body
-  const { content, role = "user" } = await req.json();
-  if (!content?.trim()) {
-    return NextResponse.json({ error: "Message content is required" }, { status: 400 });
-  }
-  if (!["user", "agent"].includes(role)) {
-    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
-  }
-
-  // 3) Connect
-  await connectToDB();
-
-  // 4) Verify user
-  const user = await User.findOne({ clerkId });
-  if (!user) {
-    console.warn("[messages] ⚠️ User not found for clerkId:", clerkId);
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // 5) Verify space
-  const space = await Space.findOne({ _id: spaceId, owner: user._id });
-  if (!space) {
-    console.warn("[messages] ⚠️ Space not found or not owned by user:", spaceId);
-    return NextResponse.json({ error: "Space not found" }, { status: 404 });
-  }
-
-  // 6) Verify thread
-  const thread = await Thread.findOne({ _id: threadId, space: space._id });
-  if (!thread) {
-    console.warn("[messages] ⚠️ Thread not found in space:", threadId);
-    return NextResponse.json({ error: "Thread not found" }, { status: 404 });
-  }
-
-  // 7) Create the message in its own collection
-  const newMessage = await Message.create({
-    thread:  thread._id,
-    space:   space._id,
-    sender:  user._id,
-    role,
-    content: content.trim(),
-  });
-
-  // talk with llm 
-
-  // Make API call to insights endpoint to get agent response
-  let agentResponse = null;
-  
-  if (role === "user") {
-
+  try {
+    // Await the params and add additional checks
+    const resolvedParams = await params;
+    const spaceId = resolvedParams.spaceId;
+    const threadId = resolvedParams.threadsId;
     
-    try {
-      // Call the insights route to get the AI response
-      const insightResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/spaces/${spaceId}/insights`);
-      
-      if (insightResponse.data) {
+    // Add extra validation to avoid MongoDB ObjectId errors
+    if (!spaceId || spaceId === 'undefined') {
+      console.error("[messages] ❌ Invalid spaceId:", spaceId);
+      return NextResponse.json({ error: "Invalid space ID" }, { status: 400 });
+    }
+    
+    if (!threadId || threadId === 'undefined') {
+      console.error("[messages] ❌ Invalid threadId:", threadId);
+      return NextResponse.json({ error: "Invalid thread ID" }, { status: 400 });
+    }
+    
+    console.log("[messages] 🔔 POST new message to thread:", threadId, "in space:", spaceId);
+
+    // 1) Auth check
+    const { userId: clerkId } = getAuth(req);
+    if (!clerkId) {
+      console.warn("[messages] 🚫 Unauthorized");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2) Parse request body
+    const body = await req.json();
+    const content = body.content;
+    const role = body.role || "user";
+    
+    if (!content?.trim()) {
+      return NextResponse.json({ error: "Message content is required" }, { status: 400 });
+    }
+    if (!["user", "agent"].includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    // 3) Connect
+    await connectToDB();
+
+    // 4) Verify user
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      console.warn("[messages] ⚠️ User not found for clerkId:", clerkId);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // 5) Verify space - with additional logging for debugging
+    console.log("[messages] 🔍 Looking for space with _id:", spaceId, "and owner:", user._id);
+    const space = await Space.findOne({ _id: spaceId, owner: user._id });
+    if (!space) {
+      console.warn("[messages] ⚠️ Space not found or not owned by user:", spaceId);
+      return NextResponse.json({ error: "Space not found" }, { status: 404 });
+    }
+
+    // 6) Verify thread
+    const thread = await Thread.findOne({ _id: threadId, space: space._id });
+    if (!thread) {
+      console.warn("[messages] ⚠️ Thread not found in space:", threadId);
+      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    }
+
+    // 7) Create the message in its own collection
+    const newMessage = await Message.create({
+      thread:  thread._id,
+      space:   space._id,
+      sender:  user._id,
+      role,
+      content: content.trim(),
+    });
+
+    // talk with llm 
+    // Make API call to insights endpoint to get agent response
+    let agentResponse = null;
+    
+    if (role === "user") {
+      try {
+        // Call the insights route to get the AI response
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        
+        // Create insights endpoint URL - handle both absolute and relative URLs
+        let insightsUrl;
+        if (apiUrl) {
+          // If API URL is provided, use it as a base
+          insightsUrl = `${apiUrl}/api/spaces/${spaceId}/insights`;
+        } else {
+          // If no API URL, use same-origin relative URL (handles server-side API calls)
+          insightsUrl = `/api/spaces/${spaceId}/insights`;
+        }
+        
+        console.log("[messages] 📡 Calling insights API at:", insightsUrl);
+        
+        // For server-to-server requests in same app, create a proper URL with origin
+        // Use the request object's headers to determine the host
+        const host = req.headers.get('host') || 'localhost:3000';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        const absoluteUrl = `${protocol}://${host}${insightsUrl}`;
+        
+        console.log("[messages] 📡 Absolute URL:", absoluteUrl);
+        const insightResponse = await axios.get(absoluteUrl);
+        
+        if (insightResponse.data) {
+          agentResponse = await Message.create({
+            thread: thread._id,
+            space: space._id,
+            sender: user._id,
+            role: "agent",
+            content: insightResponse.data.result || "I'm sorry, I couldn't generate a response at this time.",
+          });
+        }
+      } catch (error) {
+        console.error("[messages] ⚠️ Error fetching agent response:", error);
+        // Create a fallback agent response in case of error
         agentResponse = await Message.create({
           thread: thread._id,
           space: space._id,
           sender: user._id,
           role: "agent",
-          content: insightResponse.data.result || "I'm sorry, I couldn't generate a response at this time.",
+          content: "I'm sorry, I encountered an error while processing your request.",
         });
       }
-    } catch (error) {
-      console.error("[messages] ⚠️ Error fetching agent response:", error);
-      // Create a fallback agent response in case of error
-      agentResponse = await Message.create({
-        thread: thread._id,
-        space: space._id,
-        sender: user._id,
-        role: "agent",
-        content: "I'm sorry, I encountered an error while processing your request.",
-      });
     }
-  }
 
-  console.log("[messages] 🎉 Created message:", newMessage._id);
-  return NextResponse.json({ 
-    userMessage: newMessage, 
-    agentResponse 
-  }, { status: 201 });
+    console.log("[messages] 🎉 Created message:", newMessage._id);
+    return NextResponse.json({ 
+      userMessage: newMessage, 
+      agentResponse 
+    }, { status: 201 });
+  } catch (error) {
+    console.error("[messages] ❌ Error in POST message:", error);
+    return NextResponse.json({ 
+      error: "Failed to create message", 
+      details: error.message 
+    }, { status: 500 });
+  }
 }
