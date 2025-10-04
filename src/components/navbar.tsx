@@ -24,8 +24,41 @@ export function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <SignedIn>
-          <nav className="hidden md:flex gap-6">
+        <nav className="hidden md:flex gap-6">
+          <Link
+            href="/about"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/about"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            About
+          </Link>
+          <Link
+            href="/contact"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/contact"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Contact
+          </Link>
+          <Link
+            href="/pricing"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/pricing"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Pricing
+          </Link>
+          <SignedIn>
             <Link
               href="/dashboard"
               className={cn(
@@ -37,8 +70,8 @@ export function Navbar() {
             >
               Dashboard
             </Link>
-          </nav>
-        </SignedIn>
+          </SignedIn>
+        </nav>
 
         {/* Right side */}
         <div className="flex items-center gap-4">
@@ -68,6 +101,45 @@ export function Navbar() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Theme</span>
                   <ModeToggle />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/about"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      pathname === "/about"
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      pathname === "/contact"
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    Contact
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      pathname === "/pricing"
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    Pricing
+                  </Link>
                 </div>
                 
                 <SignedIn>
