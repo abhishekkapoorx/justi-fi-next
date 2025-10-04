@@ -3,7 +3,7 @@ import { SignUp } from '@clerk/nextjs'
 export default function Page() {
   return (
       <>
-     <div className="flex mt-12 w-full items-center justify-center bg-background sm:mt-8 md:mt-10 lg:mt-12 xl:mt-16">
+     <div className="flex my-20 w-full items-center justify-center bg-background sm:my-8 md:my-10 lg:my-12 xl:my-16">
         <SignUp />
         </div>
       </>
