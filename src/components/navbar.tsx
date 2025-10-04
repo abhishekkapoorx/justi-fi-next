@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import JustiFiLogo from "./JustiFiLogo"
+import { ModeToggle } from "./mode-toggle"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -41,6 +42,8 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-4">
+          <ModeToggle />
+          
           <SignedIn>
             <UserButton />
           </SignedIn>
@@ -62,6 +65,11 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[240px] sm:w-[300px]">
               <div className="flex flex-col gap-4 py-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Theme</span>
+                  <ModeToggle />
+                </div>
+                
                 <SignedIn>
                   <Link
                     href="/dashboard"

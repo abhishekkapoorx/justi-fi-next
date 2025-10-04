@@ -38,7 +38,7 @@ export default function RootLayout({
       <body className="bg-background font-sans antialiased">
         <ClerkProvider>
           <ClerkLoaded>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
               <Navbar />
               {children}
               <Footer />
