@@ -11,6 +11,7 @@ import { Navbar } from "@/components/navbar";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner"
+import { ConditionalFooterWrapper } from "@/components/ConditionalFooterWrapper"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
               <Navbar />
               {children}
-              <Footer />
+              <ConditionalFooterWrapper />
               <Toaster />
             </ThemeProvider>
           </ClerkLoaded>

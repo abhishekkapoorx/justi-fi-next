@@ -1,6 +1,7 @@
 import type React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import Footer from "@/components/Footer"
 
 export default function DashboardLayout({
   children,
@@ -8,19 +9,22 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex mb-16 w-full">
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className="flex-1 overflow-hidden">
-          <div className="flex h-full flex-col w-full">
-            {/* Sidebar Toggle Button */}
-            <div className="flex items-center gap-2 border-b px-4 py-2">
-              <SidebarTrigger className="h-8 w-8" />
+    <>
+      <div className="flex min-h-[calc(100vh-120px)] w-full">
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset className="flex-1 overflow-hidden">
+            <div className="flex h-full flex-col w-full">
+              {/* Sidebar Toggle Button */}
+              <div className="flex items-center gap-2 border-b px-4 py-2">
+                <SidebarTrigger className="h-8 w-8" />
+              </div>
+              {children}
+              <Footer />
             </div>
-            {children}
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </div>
+    </>
   )
 }
