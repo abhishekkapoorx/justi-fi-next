@@ -5,10 +5,8 @@ let isConnected = false;
 
 export async function connectToDB() {
   if (isConnected) return;
-  await mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  } as mongoose.ConnectOptions);
+  console.log("Connecting to MongoDB...");
+  await mongoose.connect(MONGODB_URI);
   isConnected = true;
   console.log("✅ MongoDB connected");
 }
