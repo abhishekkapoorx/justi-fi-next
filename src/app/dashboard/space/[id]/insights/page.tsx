@@ -148,29 +148,29 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="p-4 h-full overflow-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Case Insights</h1>
-        <p className="text-muted-foreground">AI-generated analysis and key points</p>
+    <div className="p-3 sm:p-4 h-full overflow-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Case Insights</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">AI-generated analysis and key points</p>
       </div>
 
       <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="mb-4 grid w-full grid-cols-3">
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="support">Support</TabsTrigger>
-          <TabsTrigger value="opposition">Opposition</TabsTrigger>
+        <TabsList className="mb-4 grid w-full grid-cols-3 h-8 sm:h-10">
+          <TabsTrigger value="summary" className="text-xs sm:text-sm">Summary</TabsTrigger>
+          <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
+          <TabsTrigger value="opposition" className="text-xs sm:text-sm">Opposition</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Case Overview</CardTitle>
-                <CardDescription>Key facts and insights</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Case Overview</CardTitle>
+                <CardDescription className="text-sm sm:text-base">Key facts and insights</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-md bg-muted p-4">
-                  <div className="prose prose-sm dark:prose-invert">
+                <div className="rounded-md bg-muted p-3 sm:p-4">
+                  <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
                     <ReactMarkdown>
                       {activeInsight.summary}
                     </ReactMarkdown>
@@ -179,14 +179,14 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
 
                 {activeInsight.citations && activeInsight.citations.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Citations</h4>
+                    <h4 className="font-medium mb-2 text-sm sm:text-base">Citations</h4>
                     <ul className="space-y-2">
                       {activeInsight.citations.map((citation, idx) => (
-                        <li key={idx} className="flex">
-                          <div className="w-24 font-medium">{citation.label}</div>
-                          <div>
+                        <li key={idx} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
+                          <div className="w-full sm:w-20 font-medium text-xs sm:text-sm flex-shrink-0">{citation.label}</div>
+                          <div className="flex-1 min-w-0">
                             <a href={citation.url} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-500 hover:underline">
+                               className="text-blue-500 hover:underline text-xs sm:text-sm break-all sm:break-normal">
                               {citation.url}
                             </a>
                           </div>
@@ -200,17 +200,17 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Key Issues</CardTitle>
-                <CardDescription>Main points of contention</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Key Issues</CardTitle>
+                <CardDescription className="text-sm sm:text-base">Main points of contention</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4">
                   {activeInsight.negatives.slice(0, 4).map((negative, idx) => (
-                    <li key={negative._id || idx} className="flex">
-                      <Lightbulb className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">{negative.argument}</p>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <li key={negative._id || idx} className="flex gap-2 sm:gap-3">
+                      <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 flex-shrink-0 mt-0.5 sm:mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm sm:text-base">{negative.argument}</p>
+                        <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none mt-1">
                           <ReactMarkdown>
                             {negative.explanation}
                           </ReactMarkdown>
