@@ -1,27 +1,62 @@
 import React from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import bolt from "../../../public/bolt.svg";
 import Link from "next/link";
 
 function Optimize() {
   return (
-    <div className="max-w-full my-12 sm:max-w-[90%] md:max-w-[80%] rounded-[20px] sm:rounded-[30px] md:rounded-[43px] mx-4 sm:mx-auto flex p-4 md:p-6 lg:p-8 items-center bg-gradient-to-r from-[#09B5EA]/10 via-[#09B5EA]/50 to-[#09B5EA]/10 flex-col gap-4 sm:gap-6 md:gap-8">
-      <Image
-        src={bolt}
-        alt="lightning bolt"
-        className="w-[50px] h-[45px] sm:w-[60px] sm:h-[55px] md:w-[75px] md:h-[70px] object-cover"
-      />
-      <h1 className="text-wrap text-xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight sm:leading-[130%] md:leading-[144%] font-[400] text-center">
-        Optimize your case strategy{" "}
-        <span className="block">effortlessly with JustiFi.</span>
-      </h1>
-      <Link
-        href="/dashboard"
-        className="bg-radial mx-auto flex justify-center items-center border-[0.5px] w-full sm:w-[200px] md:w-[230px] rounded-[7px] border-[#020E22] h-[50px] md:h-[59px] px-4 text-white from-[#737373] to-[#041226]"
-      >
-        Start Building Now
-      </Link>
-    </div>
+    <section className="py-16 md:py-24 bg-background">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border-primary/20">
+            <CardContent className="p-8 md:p-12 text-center">
+              <div className="space-y-8">
+                {/* Icon */}
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Image
+                      src={bolt}
+                      alt="Lightning bolt - Speed and efficiency"
+                      className="w-8 h-8 md:w-10 md:h-10 object-contain"
+                    />
+                  </div>
+                </div>
+                
+                {/* Content */}
+                <div className="space-y-6">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                    Optimize your case strategy{" "}
+                    <span className="block sm:inline mt-2 sm:mt-0">
+                      effortlessly with JustiFi.
+                    </span>
+                  </h1>
+                  
+                  <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                    Join thousands of legal professionals who have transformed their practice with our AI-powered platform.
+                  </p>
+                </div>
+                
+                {/* CTA */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button asChild size="lg" className="px-8 py-6 text-lg">
+                    <Link href="/dashboard">
+                      Start Building Now
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="px-8 py-6 text-lg">
+                    <Link href="/pricing">
+                      View Pricing
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
   );
 }
 

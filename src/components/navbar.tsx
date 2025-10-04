@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import JustiFiLogo from "./JustiFiLogo"
-import { ModeToggle } from "./mode-toggle"
+// import { ModeToggle } from "./mode-toggle"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -17,7 +17,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto w-[85%] flex h-16 items-center justify-between">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href="/" aria-label="Home">
           <JustiFiLogo />
@@ -75,7 +75,7 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-4">
-          <ModeToggle />
+          {/* <ModeToggle /> */}
           
           <SignedIn>
             <UserButton />
@@ -96,21 +96,23 @@ export function Navbar() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[240px] sm:w-[300px]">
-              <div className="flex flex-col gap-4 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Theme</span>
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] md:w-[350px]">
+              <div className="flex flex-col gap-6 p-6">
+                {/* Theme Toggle */}
+                {/* <div className="flex items-center justify-between border-b pb-4">
+                  <span className="text-sm font-medium text-foreground">Theme</span>
                   <ModeToggle />
-                </div>
+                </div> */}
                 
-                <div className="flex flex-col gap-2">
+                {/* Navigation Links */}
+                <nav className="flex flex-col gap-3">
                   <Link
                     href="/about"
                     className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
+                      "text-sm font-medium transition-colors hover:text-primary py-2 px-3 rounded-md",
                       pathname === "/about"
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:bg-muted"
                     )}
                     onClick={() => setOpen(false)}
                   >
@@ -119,10 +121,10 @@ export function Navbar() {
                   <Link
                     href="/contact"
                     className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
+                      "text-sm font-medium transition-colors hover:text-primary py-2 px-3 rounded-md",
                       pathname === "/contact"
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:bg-muted"
                     )}
                     onClick={() => setOpen(false)}
                   >
@@ -131,39 +133,42 @@ export function Navbar() {
                   <Link
                     href="/pricing"
                     className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
+                      "text-sm font-medium transition-colors hover:text-primary py-2 px-3 rounded-md",
                       pathname === "/pricing"
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:bg-muted"
                     )}
                     onClick={() => setOpen(false)}
                   >
                     Pricing
                   </Link>
-                </div>
+                </nav>
                 
-                <SignedIn>
-                  <Link
-                    href="/dashboard"
-                    className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
-                      pathname === "/dashboard"
-                        ? "text-primary"
-                        : "text-muted-foreground"
-                    )}
-                    onClick={() => setOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                </SignedIn>
+                {/* User Section */}
+                <div className="border-t pt-4">
+                  <SignedIn>
+                    <Link
+                      href="/dashboard"
+                      className={cn(
+                        "text-sm font-medium transition-colors hover:text-primary py-2 px-3 rounded-md block",
+                        pathname === "/dashboard"
+                          ? "text-primary bg-primary/10"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                      onClick={() => setOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                  </SignedIn>
 
-                <SignedOut>
-                  <Link href="/sign-in" onClick={() => setOpen(false)}>
-                    <Button className="w-full cursor-pointer" size="sm">
-                      Sign In
-                    </Button>
-                  </Link>
-                </SignedOut>
+                  <SignedOut>
+                    <Link href="/sign-in" onClick={() => setOpen(false)}>
+                      <Button className="w-full cursor-pointer" size="sm">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </SignedOut>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
