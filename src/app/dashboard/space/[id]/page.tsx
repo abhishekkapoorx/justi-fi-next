@@ -129,23 +129,23 @@ export default function SpacePage(props: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full w-full overflow-auto">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 p-3 sm:p-4 h-full w-full overflow-auto">
       {/* Left column */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 min-h-0 lg:max-h-full lg:overflow-hidden">
         {/* Documents */}
-        <Card className="flex-1">
-          <CardHeader className="flex items-center justify-between pb-2">
-            <div>
+        <Card className="flex-1 min-h-0 max-h-[50vh] lg:max-h-[45vh]">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-2 sm:gap-0">
+            <div className="min-w-0">
               <Link href={`/dashboard/space/${spaceId}/documents`}>
-                <CardTitle className="text-lg hover:text-primary cursor-pointer">Documents</CardTitle>
+                <CardTitle className="text-base sm:text-lg hover:text-primary cursor-pointer">Documents</CardTitle>
               </Link>
-              <CardDescription>Case-related documents</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Case-related documents</CardDescription>
             </div>
             <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" disabled={isUploading}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload
+                <Button size="sm" disabled={isUploading} className="w-full sm:w-auto">
+                  <Upload className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">Upload</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -204,19 +204,19 @@ export default function SpacePage(props: Props) {
         </Card>
 
         {/* Case Insights (static for now) */}
-        <Card className="flex-1">
+        <Card className="flex-1 min-h-0 max-h-[50vh] lg:max-h-[45vh]">
           <CardHeader className="pb-2">
             <Link href={`/dashboard/space/${spaceId}/insights`}>
-              <CardTitle className="text-lg hover:text-primary cursor-pointer">Case Insights</CardTitle>
+              <CardTitle className="text-base sm:text-lg hover:text-primary cursor-pointer">Case Insights</CardTitle>
             </Link>
-            <CardDescription>AI-generated insights from your documents</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">AI-generated insights from your documents</CardDescription>
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-y-auto">
             <Tabs defaultValue="summary">
-              <TabsList className="grid grid-cols-3 mb-4">
-                <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="support">Support</TabsTrigger>
-                <TabsTrigger value="opposition">Opposition</TabsTrigger>
+              <TabsList className="grid grid-cols-3 mb-4 h-8 sm:h-10">
+                <TabsTrigger value="summary" className="text-xs sm:text-sm">Summary</TabsTrigger>
+                <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
+                <TabsTrigger value="opposition" className="text-xs sm:text-sm">Opposition</TabsTrigger>
               </TabsList>
               <TabsContent value="summary" className="space-y-4">
                 <div className="rounded-md bg-muted p-4">
@@ -258,19 +258,19 @@ export default function SpacePage(props: Props) {
       </div>
 
       {/* Right column: Threads */}
-      <Card className="h-full overflow-hidden">
-        <CardHeader className="flex items-center justify-between pb-2">
-          <div>
+      <Card className="h-full min-h-[60vh] lg:min-h-full overflow-hidden">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-2 sm:gap-0">
+          <div className="min-w-0">
             <Link href={`/dashboard/space/${spaceId}/threads`}>
-              <CardTitle className="text-lg hover:text-primary cursor-pointer">Threads</CardTitle>
+              <CardTitle className="text-base sm:text-lg hover:text-primary cursor-pointer">Threads</CardTitle>
             </Link>
-            <CardDescription>AI-assisted conversations</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">AI-assisted conversations</CardDescription>
           </div>
           <Dialog open={threadOpen} onOpenChange={setThreadOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" disabled={isCreatingThread}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Thread
+              <Button size="sm" disabled={isCreatingThread} className="w-full sm:w-auto">
+                <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">New Thread</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -304,27 +304,29 @@ export default function SpacePage(props: Props) {
         </CardHeader>
         <CardContent className="h-[calc(100%-5rem)] overflow-y-auto">
           {loadingThreads ? (
-            <p>Loading…</p>
+            <p className="text-sm text-center">Loading…</p>
           ) : threads.length > 0 ? (
-            threads.map((thread) => (
-              <Link key={thread._id} href={`/dashboard/space/${spaceId}/thread/${thread._id}`} className="block">
-                <div className="flex items-center p-3 rounded-md hover:bg-muted cursor-pointer">
-                  <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="font-medium">{thread.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(thread.createdAt).toLocaleDateString()}
+            <div className="space-y-1">
+              {threads.map((thread) => (
+                <Link key={thread._id} href={`/dashboard/space/${spaceId}/thread/${thread._id}`} className="block">
+                  <div className="flex items-center p-2 sm:p-3 rounded-md hover:bg-muted cursor-pointer transition-colors">
+                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-muted-foreground flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm sm:text-base truncate">{thread.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(thread.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              ))}
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full py-8 text-center">
-              <MessageSquare className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">No threads yet</p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => setThreadOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+            <div className="flex flex-col items-center justify-center h-full py-6 sm:py-8 text-center">
+              <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
+              <p className="text-sm sm:text-base text-muted-foreground mb-4">No threads yet</p>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setThreadOpen(true)}>
+                <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Create Thread
               </Button>
             </div>

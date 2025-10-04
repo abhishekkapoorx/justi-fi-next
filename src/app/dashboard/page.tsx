@@ -81,15 +81,16 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b">
-        <JustiFiLogo className="h-8 w-auto" />
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4">
+
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button variant="secondary" size="sm">
-              <FolderPlus className="mr-2 h-4 w-4" />
-              New Space
+            <Button variant="secondary" size="sm" className="text-xs sm:text-sm">
+              <FolderPlus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">New Space</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -123,7 +124,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-4 sm:p-6">
         {loading ? (
           <p className="text-center">Loading your spaces…</p>
         ) : spaces.length === 0 ? (
@@ -142,18 +143,18 @@ export default function DashboardPage() {
             </CardFooter>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {spaces.map((space) => (
               <Link key={space._id} href={`/dashboard/space/${space._id}`}>
-                <Card className={pathname.includes(space._id) ? "border-primary" : ""}>
-                  <CardHeader>
-                    <CardTitle>{space.spaceName}</CardTitle>
-                    <CardDescription>
+                <Card className={`transition-colors hover:shadow-md ${pathname.includes(space._id) ? "border-primary" : ""}`}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base sm:text-lg truncate">{space.spaceName}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       {new Date(space.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
+                  <CardContent className="pt-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Click to open this space.
                     </p>
                   </CardContent>
