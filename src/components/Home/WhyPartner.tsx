@@ -1,6 +1,7 @@
 import React from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
 import Partner1 from "../../../public/Partner1.svg";
 import Partner2 from "../../../public/Partner2.svg";
 import Partner3 from "../../../public/Partner3.svg";
@@ -31,24 +32,34 @@ function WhyPartner() {
   ];
 
   return (
-    <div className="w-full my-12 p-8 bg-[#FBFEFF]">
-      <div className="max-w-7xl mx-auto flex flex-col gap-12">
-        <h1 className="leading-[130%] text-4xl md:text-6xl pt-4 text-center mx-auto font-[600] text-[#020E22]">
-          <span className="text-[#09B5EA]">Why Partner</span> with JustiFi?
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {partners.map((partner, index) => (
-            <PartnerCard
-              key={index}
-              img={partner.img}
-              heading={partner.heading}
-              description={partner.description}
-              link={partner.link}
-            />
-          ))}
+    <section className="py-16 md:py-24 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+              <span className="text-primary">Why Partner</span> with JustiFi?
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mt-6">
+              Join thousands of legal professionals who trust JustiFi for their case management needs
+            </p>
+          </div>
+          
+          {/* Partner Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {partners.map((partner, index) => (
+              <PartnerCard
+                key={index}
+                img={partner.img}
+                heading={partner.heading}
+                description={partner.description}
+                link={partner.link}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -64,18 +75,32 @@ const PartnerCard = ({
   link: string;
 }) => {
   return (
-    <div className="border-[1px] h-[300px] w-full max-w-sm mx-auto p-7 rounded-[25px] border-[#E4E4E4] grid place-items-center">
-      <div className="flex flex-col gap-4 items-center">
-        <Image
-          src={img}
-          alt={heading}
-          className="w-[54px] h-[54px] border-[1px] border-[#E4E4E4] rounded-full object-cover"
-        />
-        <h2 className="font-[700] text-[24px] text-center">{heading}</h2>
-        <p className="text-[16px] text-center px-2">{description}</p>
-      
-      </div>
-    </div>
+    <Card className="h-full hover:shadow-lg transition-shadow duration-300 group">
+      <CardContent className="p-6 md:p-8 text-center h-full flex flex-col justify-center">
+        <div className="space-y-6">
+          {/* Icon */}
+          <div className="flex justify-center">
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+              <Image
+                src={img}
+                alt={heading}
+                className="w-8 h-8 md:w-10 md:h-10 object-contain"
+              />
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="space-y-4">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">
+              {heading}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              {description}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

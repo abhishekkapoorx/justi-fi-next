@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
 import oneStop from "../../../public/oneStop.svg";
 
 function OneStop() {
@@ -15,53 +16,56 @@ function OneStop() {
   ];
 
   return (
-    <div className="px-4 md:px-6">
-      <div className="max-w-7xl mx-auto my-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[48px] font-[600] text-center leading-tight mb-12">
-          Introducing Your One-Stop <br />
-          <span className="text-[#09B5EA]">Litigation Management Suite</span>
-        </h1>
+    <section className="py-16 md:py-24 bg-background">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6">
+              Introducing Your One-Stop{" "}
+              <span className="text-primary">Litigation Management Suite</span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              We help legal professionals streamline case workflows, automate drafting, and maintain complete case memory{" "}
+              <span className="block sm:inline mt-2 sm:mt-0">
+                with our all-in-one litigation management platform—available whenever you need it!
+              </span>
+            </p>
+          </div>
 
-        <h2 className="max-w-2xl mx-auto md:mx-0 text-center md:text-left font-[400] text-base sm:text-lg mb-8">
-          We help legal professionals streamline case workflows, automate drafting, and maintain complete case memory{" "}
-          <span className="block md:inline">
-            with our all-in-one litigation management platform—available whenever you need it!
-          </span>
-        </h2>
-
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Feature list */}
-          <div className="w-full md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {content.map((text, idx) => (
-              <div
-                key={idx}
-                className="flex p-3 border border-[#E4E4E4] rounded-[14px] max-w-[300px] mx-auto"
-              >
-                <h4 className="text-sm sm:text-base">{text}</h4>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Feature Grid */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {content.map((text, idx) => (
+                  <Card key={idx} className="hover:shadow-md transition-shadow duration-300">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                          {text}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Illustration */}
-          <div className="hidden md:flex md:w-2/5 lg:w-[40rem] justify-center md:ml-24">
-            <Image
-              src={oneStop}
-              alt="Legal case management"
-              className="w-full h-auto object-contain"
-            />
-          </div>
-
-          {/* On mobile show image below */}
-          <div className="md:hidden w-full flex justify-center mt-6">
-            <Image
-              src={oneStop}
-              alt="Legal case management"
-              className="w-4/5 sm:w-3/5 h-auto object-contain"
-            />
+            {/* Illustration */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-lg">
+                <Image
+                  src={oneStop}
+                  alt="Legal case management platform"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
