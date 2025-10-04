@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Lightbulb, AlertCircle } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import axios from "axios"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -40,7 +40,8 @@ interface IInsight {
   updatedAt: string;
 }
 
-export default function InsightsPage({ params }: { params: { id: string } }) {
+export default function InsightsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [insights, setInsights] = useState<IInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeInsight, setActiveInsight] = useState<IInsight | null>(null);
@@ -50,7 +51,7 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
     const fetchInsights = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/spaces/${params.id}/getinsights`);
+        const response = await axios.get(`/api/spaces/${resolvedParams.id}/getinsights`);
         const data = response.data;
         
         if (data.insights && data.insights.length > 0) {
@@ -68,7 +69,7 @@ export default function InsightsPage({ params }: { params: { id: string } }) {
     };
 
     fetchInsights();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   // Get severity color based on level
   const getSeverityColor = (severity: string) => {

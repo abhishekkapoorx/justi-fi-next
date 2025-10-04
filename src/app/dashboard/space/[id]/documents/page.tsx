@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,9 +37,10 @@ interface DocumentItem {
 export default function DocumentsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id: spaceId } = params;
+  const resolvedParams = use(params);
+  const { id: spaceId } = resolvedParams;
 
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
